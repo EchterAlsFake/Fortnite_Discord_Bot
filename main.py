@@ -89,7 +89,6 @@ def get_map_image():
 @discord.app_commands.choices(gamemode=[
     discord.app_commands.Choice(name="Solo", value="solo"),
     discord.app_commands.Choice(name="Duo", value="duo"),
-    discord.app_commands.Choice(name="Trio", value="trio")
 ],
     input_method=[
         discord.app_commands.Choice(name="Keyboard & Mouse", value="keyboard_mouse"),
@@ -97,12 +96,13 @@ def get_map_image():
         discord.app_commands.Choice(name="Gamepad", value="gamepad")
     ])
 async def player_stats(interaction: discord.Interaction, player_name : str, gamemode : str, input_method : str):
+    await interaction.response.send_message("Please wait...")
     stats = get_player_information(player_name, input=input_method, gamemode=gamemode)
     if stats is False:
-        await interaction.response.send_message("The Player doesn't exist.")
+        await interaction.followup.send("The Player doesn't exist.")
 
     else:
-        await interaction.response.send_message(f"""
+        await interaction.followup.send(f"""
 Name: {player_name}
 Kills: {stats.get("kills")}
 KD: {stats.get("kd")}
@@ -124,25 +124,28 @@ Last Modified: {stats.get("last_updated")}""")
 
 @bot.tree.command(name="get_creator_code_info", description="The Creator Code")
 async def get_creator_code(interaction: discord.Interaction, creator_code : str):
+        await interaction.response.send_message("Please wait...")
         data = get_creator_code(creator_code)
         if data is False:
-            await interaction.response.send_message("Invalid Creator Code!")
+            await interaction.followup.send("Invalid Creator Code!")
 
         account_name = data[0]
         account_id = data[1]
         code = data[2]
-        await interaction.response.send_message(f"""
+        await interaction.followup.send(f"""
 Account Name: {account_name}
 Account ID: {account_id}
 Creator Code: {code}""")
         print(f"{return_color()}Responded a Creator Code{reset()}")
 
+
 @bot.tree.command(name="get_aes_key", description="Returns AES key")
 async def return_aes_key(interaction: discord.Interaction):
+    await interaction.response.send_message("Please wait...")
     aes = get_aes_key()
     build = aes[0]
     key = aes[1]
-    await interaction.response.send_message(f"""
+    await interaction.followup.send(f"""
     Build: {build}
     Key: {key}""")
     print(f"{return_color()}Responded AES Key{reset()}")
@@ -150,9 +153,9 @@ async def return_aes_key(interaction: discord.Interaction):
 
 @bot.tree.command(name="get_map_locations", description="Returns the exact coordinates for each city")
 async def get_map_locations_(interaction: discord.Interaction):
+    await interaction.response.send_message("Please wait...")
     current_message = ""
     messages = []
-    await interaction.response.send_message("Please wait...")
     for item in get_map_locations():
         name, id, y, x, z = item
         formatted_item = f"""Name: {name}, ID: {id} 
@@ -179,8 +182,9 @@ async def get_map_locations_(interaction: discord.Interaction):
 
 
 @bot.tree.command(name="get_map_image", description="Shows the Fortnite Map Image")
-async def get_map_image_(interaction: discord):
-    await interaction.response.send_message(get_map_image())
+async def get_map_image_(interaction: discord.Interaction):
+    await interaction.response.send_message("Please wait...")
+    await interaction.followup.send(get_map_image())
     print(f"{return_color()}Responded an Image{reset()}")
 
 
