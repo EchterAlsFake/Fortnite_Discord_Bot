@@ -123,7 +123,7 @@ Last Modified: {stats.get("last_updated")}""")
 
 
 @bot.tree.command(name="get_creator_code_info", description="The Creator Code")
-async def get_creator_code(interaction: discord.Interaction, creator_code : str):
+async def get_creator_code_(interaction: discord.Interaction, creator_code : str):
         await interaction.response.send_message("Please wait...")
         data = get_creator_code(creator_code)
         if data is False:
