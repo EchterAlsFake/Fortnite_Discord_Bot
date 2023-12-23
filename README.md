@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/EchterAlsFake/Porn_Fetch/releases/tag/beta-3.0"><strong>Invite to your server</strong></a>
+  <a href="https://discord.com/api/oauth2/authorize?client_id=1187896849739288749&scope=applications.commands"><strong>Invite to your server</strong></a>
 
 ## Table of Contents
 1. [Introduction](#introduction)
