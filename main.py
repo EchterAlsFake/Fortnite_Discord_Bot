@@ -4,6 +4,7 @@ import discord.app_commands
 from configparser import ConfigParser
 from discord.ext import commands
 from hue_shift import return_color, reset
+from fortnite_api import errors
 
 conf = ConfigParser()
 conf.read('config.ini')
@@ -11,40 +12,45 @@ api_key = conf.get("bot", "fortnite_api_key")
 discord_secret = conf.get("bot", "client_secret")
 
 intents = discord.Intents.default()
-intents.message_content = True
+intents.message_content = False
 bot = commands.Bot(command_prefix="!", intents=intents)
 api = fortnite_api.FortniteAPI(api_key)
 
 
-def get_player_information(player_name, gamemode, input) -> dict:
+def get_player_information(player_name, gamemode, input):
     """
     :param player_name:
     :param gamemode:
     :param input:
     :return:
     """
-    stats = api.stats.fetch_by_name(name=player_name)
+    try:
+        stats = api.stats.fetch_by_name(name=player_name)
 
-    input_stats = getattr(stats.stats, input)
-    mode_stats = getattr(input_stats, gamemode)
+    except errors.NotFound:
+        return False
 
-    return {
-        "kills": mode_stats.kills,
-        "deaths": mode_stats.deaths,
-        "kd": mode_stats.kd,
-        "players_outlived": mode_stats.players_outlived,
-        "minutes_played": mode_stats.minutes_played,
-        "matches": mode_stats.matches,
-        "kills_per_match": mode_stats.kills_per_match,
-        "top_5": mode_stats.top5,
-        "top_12": mode_stats.top12,
-        "winrate": mode_stats.win_rate,
-        "score_per_match": mode_stats.scorePerMatch,
-        "score": mode_stats.score,
-        "score_per_min": mode_stats.score_per_min,
-        "last_updated": mode_stats.last_modified,
-        "kills_per_min": mode_stats.kills_per_min
-    }
+    else:
+        input_stats = getattr(stats.stats, input)
+        mode_stats = getattr(input_stats, gamemode)
+
+        return {
+            "kills": mode_stats.kills,
+            "deaths": mode_stats.deaths,
+            "kd": mode_stats.kd,
+            "players_outlived": mode_stats.players_outlived,
+            "minutes_played": mode_stats.minutes_played,
+            "matches": mode_stats.matches,
+            "kills_per_match": mode_stats.kills_per_match,
+            "top_5": mode_stats.top5,
+            "top_12": mode_stats.top12,
+            "winrate": mode_stats.win_rate,
+            "score_per_match": mode_stats.scorePerMatch,
+            "score": mode_stats.score,
+            "score_per_min": mode_stats.score_per_min,
+            "last_updated": mode_stats.last_modified,
+            "kills_per_min": mode_stats.kills_per_min
+        }
 
 
 def get_aes_key() -> list[str]:
@@ -92,8 +98,11 @@ def get_map_image():
     ])
 async def player_stats(interaction: discord.Interaction, player_name : str, gamemode : str, input_method : str):
     stats = get_player_information(player_name, input=input_method, gamemode=gamemode)
+    if stats is False:
+        await interaction.response.send_message("The Player doesn't exist.")
 
-    await interaction.response.send_message(f"""
+    else:
+        await interaction.response.send_message(f"""
 Name: {player_name}
 Kills: {stats.get("kills")}
 KD: {stats.get("kd")}
@@ -110,7 +119,7 @@ Score: {stats.get("score")}
 Score per min: {stats.get("score_per_min")}
 Kills per min: {stats.get("kills_per_min")}
 Last Modified: {stats.get("last_updated")}""")
-    print(f"{return_color()}Responded player stats{reset()}")
+        print(f"{return_color()}Responded player stats{reset()}")
 
 
 @bot.tree.command(name="get_creator_code_info", description="The Creator Code")
