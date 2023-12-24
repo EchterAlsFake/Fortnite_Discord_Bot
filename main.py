@@ -1,4 +1,5 @@
 import fortnite_api
+import threading
 import discord.app_commands
 
 from configparser import ConfigParser
@@ -84,84 +85,66 @@ def get_map_image():
     return map_object.poi_image
 
 
-@bot.tree.command()
-@discord.app_commands.describe(player_name="The name of the player", gamemode="The game mode", input_method="The input method")
-@discord.app_commands.choices(gamemode=[
-    discord.app_commands.Choice(name="Solo", value="solo"),
-    discord.app_commands.Choice(name="Duo", value="duo"),
-],
-    input_method=[
-        discord.app_commands.Choice(name="Keyboard & Mouse", value="keyboard_mouse"),
-        discord.app_commands.Choice(name="Touch", value="touch"),
-        discord.app_commands.Choice(name="Gamepad", value="gamepad")
-    ])
-async def player_stats(interaction: discord.Interaction, player_name : str, gamemode : str, input_method : str):
-    await interaction.response.send_message("Please wait...")
-    stats = get_player_information(player_name, input=input_method, gamemode=gamemode)
+def player_stats_thread(interaction, name, gamemode, input):
+    stats = get_player_information(name, input=input, gamemode=gamemode)
     if stats is False:
-        await interaction.followup.send("The Player doesn't exist.")
+        bot.loop.create_task(interaction.followup.send("The Player doesn't exist."))
 
     else:
-        await interaction.followup.send(f"""
-Name: {player_name}
-Kills: {stats.get("kills")}
-KD: {stats.get("kd")}
-Deaths: {stats.get("deaths")}
-Players outlived: {stats.get("players_outlived")}
-Minutes played: {stats.get("minutes_played")}
-Matches: {stats.get("matches")}
-Kills per match: {stats.get("kills_per_match")}
-Top 5: {stats.get("top_5")}
-Top 12: {stats.get("top_12")}
-Winrate: {stats.get("winrate")}
-Score per match: {stats.get("score_per_match")}
-Score: {stats.get("score")}
-Score per min: {stats.get("score_per_min")}
-Kills per min: {stats.get("kills_per_min")}
-Last Modified: {stats.get("last_updated")}""")
+        bot.loop.create_task(interaction.followup.send(f"""
+    Name: {name}
+    Kills: {stats.get("kills")}
+    KD: {stats.get("kd")}
+    Deaths: {stats.get("deaths")}
+    Players outlived: {stats.get("players_outlived")}
+    Minutes played: {stats.get("minutes_played")}
+    Matches: {stats.get("matches")}
+    Kills per match: {stats.get("kills_per_match")}
+    Top 5: {stats.get("top_5")}
+    Top 12: {stats.get("top_12")}
+    Winrate: {stats.get("winrate")}
+    Score per match: {stats.get("score_per_match")}
+    Score: {stats.get("score")}
+    Score per min: {stats.get("score_per_min")}
+    Kills per min: {stats.get("kills_per_min")}
+    Last Modified: {stats.get("last_updated")}"""))
         print(f"{return_color()}Responded player stats{reset()}")
 
 
-@bot.tree.command(name="get_creator_code_info", description="The Creator Code")
-async def get_creator_code_(interaction: discord.Interaction, creator_code : str):
-        await interaction.response.send_message("Please wait...")
-        data = get_creator_code(creator_code)
-        if data is False:
-            await interaction.followup.send("Invalid Creator Code!")
+def get_creator_code_thread(interaction, creator_code):
+    data = get_creator_code(creator_code)
+    if data is False:
+        bot.loop.create_task(interaction.followup.send("Invalid Creator Code!"))
 
-        account_name = data[0]
-        account_id = data[1]
-        code = data[2]
-        await interaction.followup.send(f"""
-Account Name: {account_name}
-Account ID: {account_id}
-Creator Code: {code}""")
-        print(f"{return_color()}Responded a Creator Code{reset()}")
+    account_name = data[0]
+    account_id = data[1]
+    code = data[2]
+    bot.loop.create_task(interaction.followup.send(f"""
+    Account Name: {account_name}
+    Account ID: {account_id}
+    Creator Code: {code}"""))
+    print(f"{return_color()}Responded a Creator Code{reset()}")
 
 
-@bot.tree.command(name="get_aes_key", description="Returns AES key")
-async def return_aes_key(interaction: discord.Interaction):
-    await interaction.response.send_message("Please wait...")
+def return_aes_key_thread(interaction):
     aes = get_aes_key()
     build = aes[0]
     key = aes[1]
-    await interaction.followup.send(f"""
-    Build: {build}
-    Key: {key}""")
+    bot.loop.create_task(interaction.followup.send(f"""
+        Build: {build}
+        Key: {key}"""))
     print(f"{return_color()}Responded AES Key{reset()}")
 
 
-@bot.tree.command(name="get_map_locations", description="Returns the exact coordinates for each city")
-async def get_map_locations_(interaction: discord.Interaction):
-    await interaction.response.send_message("Please wait...")
+def get_map_location_thread(interaction):
     current_message = ""
     messages = []
     for item in get_map_locations():
         name, id, y, x, z = item
         formatted_item = f"""Name: {name}, ID: {id} 
-        Location: X: {x} 
-        Location: Y: {y} 
-        Location: Z: {z}\n"""
+            Location: X: {x} 
+            Location: Y: {y} 
+            Location: Z: {z}\n"""
 
         # Check if adding this item will exceed the limit
         if len(current_message) + len(formatted_item) > 2000:
@@ -176,9 +159,47 @@ async def get_map_locations_(interaction: discord.Interaction):
 
     # Send each message
     for msg in messages:
-        await interaction.followup.send(msg)
+        bot.loop.create_task(interaction.followup.send(msg))
 
     print(f"{return_color()}Responded Location{reset()}")
+
+
+@bot.tree.command()
+@discord.app_commands.describe(player_name="The name of the player", gamemode="The game mode", input_method="The input method")
+@discord.app_commands.choices(gamemode=[
+    discord.app_commands.Choice(name="Solo", value="solo"),
+    discord.app_commands.Choice(name="Duo", value="duo"),
+],
+    input_method=[
+        discord.app_commands.Choice(name="Keyboard & Mouse", value="keyboard_mouse"),
+        discord.app_commands.Choice(name="Touch", value="touch"),
+        discord.app_commands.Choice(name="Gamepad", value="gamepad")
+    ])
+async def player_stats(interaction: discord.Interaction, player_name : str, gamemode : str, input_method : str):
+    interaction.response.send_message("Please wait...")
+    t = threading.Thread(target=player_stats_thread, args=(interaction, player_name, gamemode, input_method, ))
+    t.start()
+
+
+@bot.tree.command(name="get_creator_code_info", description="The Creator Code")
+async def get_creator_code_(interaction: discord.Interaction, creator_code : str):
+    await interaction.response.send_message("Please wait...")
+    t1 = threading.Thread(target=get_creator_code_thread, args=(interaction, creator_code, ))
+    t1.start()
+
+
+@bot.tree.command(name="get_aes_key", description="Returns AES key")
+async def return_aes_key(interaction: discord.Interaction):
+    await interaction.response.send_message("Please wait...")
+    t1 = threading.Thread(target=return_aes_key_thread, args=(interaction, ))
+    t1.start()
+
+
+@bot.tree.command(name="get_map_locations", description="Returns the exact coordinates for each city")
+async def get_map_locations_(interaction: discord.Interaction):
+    await interaction.response.send_message("Please wait...")
+    t1 = threading.Thread(target=get_map_location_thread, args=(interaction, ))
+    t1.start()
 
 
 @bot.tree.command(name="get_map_image", description="Shows the Fortnite Map Image")
