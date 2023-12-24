@@ -176,7 +176,7 @@ def get_map_location_thread(interaction):
         discord.app_commands.Choice(name="Gamepad", value="gamepad")
     ])
 async def player_stats(interaction: discord.Interaction, player_name : str, gamemode : str, input_method : str):
-    interaction.response.send_message("Please wait...")
+    await interaction.response.send_message("Please wait...")
     t = threading.Thread(target=player_stats_thread, args=(interaction, player_name, gamemode, input_method, ))
     t.start()
 
