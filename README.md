@@ -1,3 +1,9 @@
+> [!WARNING]
+> This Bot is currently deprecated, because the API which I used won't support most of the endpoints anymore. I'll update it at some times, but now it won't work.
+> Please wait for my upodate, and then you can use it again :)
+
+> [!IMPORTANT]
+> This repository may seem dead, but it isn't. If I don't tell otherwise above everything should be working from the codebase. It's just, that I may not always host the Bot.
 <p align="center">
   <img src="https://github.com/EchterAlsFake/Fortnite_Discord_Bot/blob/657bc9b6d758f4649a9730ada9aa77e45c02b118/assets/Fortnite.png" alt="Fortnite Discord Bot Logo" width="200"/>
 </p>
